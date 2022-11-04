@@ -1,20 +1,83 @@
-//alert('hello javascript alert!')
-//console.log('hello console!')
-//var map = L.map('map').setView([34.0697,-118.4432], 17); santa monica
-console.log('debug 01')
-var map = L.map('map').setView([36.0726419,140.1180764], 19); //ララガーデン Mapセンタを表示　緯度経度とズームレベル
+// global variables
+let map;
 
-console.log('debug 02')
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
- //   console.log('debug 03')
-	attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-}).addTo(map);
+// path to csv data
+//let path = "data/dunitz.csv";
+let path = "data/Nico_Beer.csv";
 
-console.log('debug 04')
-var marker = L.marker([36.0726419,140.1180764]).addTo(map)
-		.bindPopup('ニコ情報<br> ニコがよく飲んでいるお店')
-		.openPopup();	
-        console.log('debug 05')
+let markers = L.featureGroup();
 
-//var marker2 = L.marker([36.0726405,140.1180419]).addTo(map);	
-//        console.log('debug 05')       
+// initialize
+$( document ).ready(function() {
+
+	// map作成
+    createMap();
+
+	// csv読み込み
+	readCSV(path);
+});
+
+// create the map
+function createMap(){
+	map = L.map('map').setView([0,0],3);
+
+	L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+		attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+	}).addTo(map);
+}
+
+// function to read csv data
+function readCSV(){
+	Papa.parse(path, {
+		header: true,
+		download: true,
+		complete: function(data) {
+			console.log(data);
+			
+			// map the data
+			mapCSV(data);
+
+		}
+	});
+}
+
+function mapCSV(data){
+
+/*	
+	// circle options
+	let circleOptions = {
+		radius: 7,
+		weight: 1,
+		color: 'white',
+		fillColor: 'dodgerblue',
+		fillOpacity: 1
+	}
+
+	// loop through each entry
+	data.data.forEach(function(item,index){
+		// create marker
+		let marker = L.circleMarker([item.latitude,item.longitude],circleOptions)
+
+		// add marker to featuregroup		
+		markers.addLayer(marker)
+	})
+*/
+//	GoogleMapっぽいピン
+	// loop through each entry
+	data.data.forEach(function(item,index){
+		// create marker
+		let marker = L.marker([item.latitude,item.longitude]).bindPopup(item.title)
+
+		// add marker to featuregroup
+		markers.addLayer(marker)
+
+		// Sidebarへの追加
+		$('.sidebar').append('<div class="sidebar-item">' + item.title)
+	})
+
+	// add featuregroup to map
+	markers.addTo(map)
+
+	// fit markers to map
+	map.fitBounds(markers.getBounds())
+}
